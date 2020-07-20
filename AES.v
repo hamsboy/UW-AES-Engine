@@ -14,9 +14,9 @@ module AES(input [127:0] key,input keyLen,input validIn,
 			 
 			 //rotate the last word by one byte(so rotate w3 by  1byte)
 			 assign temp={w3[31:24],w3[23:0]};
-			 //SubByte s(.in(temp),.out(sub));
+			 SubByte s(.in(temp),.out(sub));
 			 
-			 assign sub=32'hd7ab76fe;
+			 //assign sub=32'hd7ab76fe;
 			 //find Rcon value
 			 always @ (rnum)
 			 begin
