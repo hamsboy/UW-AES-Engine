@@ -1,4 +1,7 @@
-
+/* Hamidou Diallo 
+7/15/2020
+This program expends a single key (128-bits)
+*/
 module KeySchedule(input [127:0] key,input keyLen,input validIn,
           input   [3:0] rnum,
           output validOut, output [127:0] outKey);
