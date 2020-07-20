@@ -1,5 +1,5 @@
 
-module AES(input [127:0] key,input keyLen,input validIn,
+module KeySchedule(input [127:0] key,input keyLen,input validIn,
           input   [3:0] rnum,
           output validOut, output [127:0] outKey);
 			 
@@ -65,5 +65,5 @@ module test();
 	assign keyLen=1;
 	
   
-  AES aes (.key(key),.keyLen(keyLen),.validIn(validIn),.rnum(rnum),.validOut(validOut),.outKey(outKey));
+ KeySchedule roundKey (.key(key),.keyLen(keyLen),.validIn(validIn),.rnum(rnum),.validOut(validOut),.outKey(outKey));
 endmodule
