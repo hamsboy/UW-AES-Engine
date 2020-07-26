@@ -1,8 +1,12 @@
 module subByte
 	(
 	input wire [127:0] state,
-	output reg  [127:0]state_out
+	input  clk,
+	input  subbyte_valid_in,	// Valid bit. When high, data is valid and should be processed.
+	output wire  [127:0]state_out,
+	output subbyte_valid_out 
 	);
+       
 
 
 
