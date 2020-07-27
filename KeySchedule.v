@@ -2,6 +2,7 @@
 7/15/2020
 This program expends a single key (128-bits)
 */
+
 module KeySchedule(input [127:0] key,input keyLen,input validIn,
           input   [3:0] rnum,
           output validOut, output [127:0] outKey);
@@ -16,11 +17,22 @@ module KeySchedule(input [127:0] key,input keyLen,input validIn,
 			 assign w3=key[31:0];
 			 
 			 //rotate the last word by one byte(so rotate w3 by  1byte)
-			 assign temp={w3[31:24],w3[23:0]};
-			 SubByte s(.in(temp),.out(sub));
+			 assign temp={w3[23:0],w3[31:24]};
+			// SubByte s(.in(temp),.out(sub));
 			 
-			 //assign sub=32'hd7ab76fe;
+						 
+			genvar itr;
+
+			generate
+					for (itr = 0 ; itr <= 31; itr = itr+8) begin :a
+								sbox sb (.sbox_data_in(temp[itr +:8]) , .sbox_data_out(sub[itr +:8]));
+								end
+			endgenerate
+		 
+			 
+			//assign sub=32'h6238bbf6;
 			 //find Rcon value
+			 
 			 always @ (rnum)
 			 begin
 				 case (rnum)
@@ -41,7 +53,7 @@ module KeySchedule(input [127:0] key,input keyLen,input validIn,
 			 assign outKey[127:96]=w0^sub^rcon;
 			 assign outKey[95:64]=w0^sub^rcon^w1;
 			 assign outKey[63:32]=w0^sub^rcon^w1^w2;
-			 assign outKey[31:0]=w0^sub^rcon^w1^w2^w3;
+			 assign outKey[31:0]=w0^sub^rcon^w1^w2^w3; 
 			 assign validOut=1;
 						 
 			 
@@ -49,10 +61,7 @@ module KeySchedule(input [127:0] key,input keyLen,input validIn,
 	
 endmodule
 
-module SubByte(input[31:0] in, output[31:0] out);
-  assign out=32'h16161616;
 
-endmodule
 
 module test();
    wire [127:0] key;
@@ -66,7 +75,18 @@ module test();
 	assign validIn=1;
 	assign validOut=1;
 	assign keyLen=1;
-	
+	wire[31:0] temp,sub;
+	assign temp=32'hD6AB76FE;
+	genvar itr;
+
+			generate
+					for (itr = 0 ; itr <= 31; itr = itr+8) begin :a
+								sbox sb (.sbox_data_in(temp[itr +:8]) , .sbox_data_out(sub[itr +:8]));
+								end
+			endgenerate
+		 
   
- KeySchedule roundKey (.key(key),.keyLen(keyLen),.validIn(validIn),.rnum(rnum),.validOut(validOut),.outKey(outKey));
+  KeySchedule aes (.key(key),.keyLen(keyLen),.validIn(validIn),.rnum(rnum),.validOut(validOut),.outKey(outKey));
 endmodule
+
+
