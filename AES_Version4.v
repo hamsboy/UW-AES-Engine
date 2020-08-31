@@ -1,3 +1,6 @@
+/*In this version I combined Subyte and mix Column as one Layer
+*/
+
 module AES(input [127:0] key,input keyLen,input validIn,
           input   [31:0] rnum,input clk,
           output validOut, output wire [127:0] outKey);
