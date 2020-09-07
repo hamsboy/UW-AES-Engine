@@ -36,7 +36,7 @@ module AES(input [127:0] key,input keyLen,input validIn,
 	    
         if (!USE_CASE )   
      
-		      assign outKey = 0;
+		 assign outKey = 0;
          
             /* donothing */
       
@@ -45,9 +45,9 @@ module AES(input [127:0] key,input keyLen,input validIn,
             if(USE_CASE )
                
                 assign outKey[127:96]=w0^sub^rnum;
-		         assign outKey[95:64]=w0^sub^rnum^w1;
-			        assign outKey[63:32]=w0^sub^rnum^w1^w2;
-			      assign outKey[31:0]=w0^sub^rnum^w1^w2^w3;
+		assign outKey[95:64]=w0^sub^rnum^w1;
+	        assign outKey[63:32]=w0^sub^rnum^w1^w2;
+	        assign outKey[31:0]=w0^sub^rnum^w1^w2^w3;
                 
        
    endgenerate
@@ -201,12 +201,12 @@ endmodule
 
 //=================================================================================================================================================================
 module test();
-    wire [127:0] key;
+        wire [127:0] key;
 	 
 	wire keyLen,clk;
 	wire validIn; 
 	//wire   [3:0] rnum;
-   wire validOut;
+        wire validOut;
 	wire [127:0] outKey;
 	wire[127:0] data; 
 	wire[127:0] dataOut;
