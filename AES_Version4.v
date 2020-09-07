@@ -216,22 +216,6 @@ module test();
 	assign clk=1;
 	assign validIn=0;
 	assign validOut=1;
-	assign keyLen=1;
-	
-
-//		
-//		wire [7:0] address;
-//		assign address=8'hff;
-//		reg [19:0] data_ROM [0:255];
-//    wire[19:0] temp;
-//    initial $readmemh("C:\\Users\\youma\\Desktop\\Capstone\\verilog\\rom.txt", data_ROM); 
-//	 assign temp=data_ROM[address];
-//	 
-//     always @(address)
-//     $display("%h", {temp[18:16],temp[11:10],temp[13],temp[9:8]}); 
-
-
-		
-		
+	assign keyLen=1;		
   AESCORE1 core1 (.key(key), .clk(clk),.keyLen(keyLen),.validIn(validIn), .validOut(validOut), .data(data), .dataOut(dataOut),.keyOut(outKey));
 endmodule
