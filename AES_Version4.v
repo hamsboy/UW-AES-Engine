@@ -54,30 +54,6 @@ module AES(input [127:0] key,input keyLen,input validIn,
 						 
 endmodule
 
-///=============================================================================================================================
-
-module SubByte1 (input wire [127:0] state, output wire  [127:0]state_out);
-
-
-reg [19:0] data_ROM [0:255];
-wire [319:0 ] adress;
-initial $readmemh("C:\\Users\\youma\\Desktop\\Capstone\\verilog\\rom.txt", data_ROM); 
-//integer i=0;
-genvar itr;
-generate
-		for (itr = 0 ; itr <= 127; itr = itr+8) begin :s
-					//sbox sb (.sbox_data_in(state[itr +:8]) , .sbox_data_out(state_out[itr +:8]));
-					
-	
-	
-      //always @(adress)
-	   assign adress[(itr*2+itr/2) +:20]=data_ROM[state[itr +:8]];
-      assign state_out[itr +:8]=adress[(itr*2+ itr/2 +12) +:8];
-		
-	 
-					end
- endgenerate
-endmodule
 
 
 //==================================================================================================================
@@ -111,6 +87,7 @@ assign          sr[7:0]   = sb[39:32];
 endmodule
 
 //==================================================================================================================
+/* Subyte and MixColumn*/
 module MixColumn1(in_byte, out_byte);
 	input [127:0] in_byte;
 	output wire [127:0] out_byte;
