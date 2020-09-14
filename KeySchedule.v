@@ -1,6 +1,6 @@
 /* Hamidou Diallo 
 7/15/2020
-This program expends a single key (128-bits)
+This program expends a single key (128-bits or 256-bits)
 */
 
 /*In this version I combined Subyte and mix Column as one Layer
