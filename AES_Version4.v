@@ -1,59 +1,122 @@
 /*In this version I combined Subyte and mix Column as one Layer
 */
-
-module AES(input [127:0] key,input keyLen,input validIn,
-          input   [31:0] rnum,input clk,
-          output validOut, output wire [127:0] outKey);
+module KeyExpansion #(parameter KEY_WIDTH = 128) 
+         (input [KEY_WIDTH-1:0] key,input [KEY_WIDTH-1:0] prev_key,
+			 input keyLen,input flip,input validIn,
+          input	[3:0] rnum,input clk,input reset,
+          output reg validOut,output reg [3:0] rnum_out,
+			 output reg outflip,output reg [KEY_WIDTH-1:0] outKey);
 			 
-			 wire [31:0] w0,w1,w2,w3,temp,sub;
 			
-			  reg [127:0] tempOutKey;
+			 reg [31:0] w0,w1,w2,w3,w4;
+			 wire [31:0] sub;
+	       reg [31:0] temp;
+			 reg [KEY_WIDTH-1:0] round_key;
 			 //split the key into 4 words
-			 assign w0=key[127:96];
-			 assign w1=key[95:64];
-			 assign w2=key[63:32];
-			 assign w3=key[31:0];
-			 
-			 //rotate the last word by one byte(so rotate w3 by  1byte)
-			 assign temp={w3[23:0],w3[31:24]};
-			// SubByte s(.in(temp),.out(sub));
-			 
-					 
+
+
+          always @(*) begin
+				 if (keyLen) begin  
+						w0<=prev_key[127:96];
+						w1<=prev_key[95:64];
+						w2<=prev_key[63:32];
+						w3<=prev_key[31:0];
+						w4<=key[31:0];
+				 end else begin
+				
+						w0<=key[127:96];
+						w1<=key[95:64];
+						w2<=key[63:32];
+						w3<=key[31:0];
+						w4<=key[31:0];
+				  end
+			
+			 end
+
+		 
+			
+	     
 			genvar itr;
 
 			generate
 					for (itr = 0 ; itr <= 31; itr = itr+8) begin :a
-								sbox sb (.sbox_data_in(temp[itr +:8]) , .sbox_data_out(sub[itr +:8]));
+								sbox sb (.addr(temp[itr +:8]),.clk(clk),.reset(reset) , .validIn(validIn),.dout(sub[itr +:8]));
 								end
 			endgenerate
 		 
 		  
 	       
-         parameter USE_CASE = 1;
-			 
-			 
-	generate
-	    
-        if (!USE_CASE )   
-     
-		 assign outKey = 0;
-         
-            /* donothing */
-      
-        else 
-        
-            if(USE_CASE )
-               
-                assign outKey[127:96]=w0^sub^rnum;
-		assign outKey[95:64]=w0^sub^rnum^w1;
-	        assign outKey[63:32]=w0^sub^rnum^w1^w2;
-	        assign outKey[31:0]=w0^sub^rnum^w1^w2^w3;
-                
        
-   endgenerate
+			 
+				always @(*) begin
+							 
+									if (!flip) begin  
+										 temp<=w4;
+										 round_key[127:96]<=w0^sub;
+										 round_key[95:64]<=w0^sub^w1;
+										 round_key[63:32]<=w0^sub^w1^w2;
+										 round_key[31:0]<=w0^sub^w1^w2^w3;
+											
+										 //update rcon
+										 rnum_out<=rnum+1;
+									
+									end else begin
+										  //rotate the last word by one byte(so rotate w3 by  1byte)
+										  temp<={w4[23:0],w4[31:24]};
+										  
+										  round_key[127:96]<=w0^sub^rcon(rnum);
+										  round_key[95:64]<=w0^sub^rcon(rnum)^w1;
+										  round_key[63:32]<=w0^sub^rcon(rnum)^w1^w2;
+										  round_key[31:0]<=w0^sub^rcon(rnum)^w1^w2^w3;
+										  rnum_out<=rnum;
+									end 
+								  
+									if (!keyLen)begin
+											outflip<=flip;
+											rnum_out<=rnum+1;
+								  end else begin
+											outflip<=!flip;
+								  end 
+							
+					//end
+         end
+		  
+		 always @(posedge clk,negedge reset) begin
+					 if(!reset) begin
+						outKey<=0;
+						validOut<=0;
+					 end else begin
+					   if(validIn) begin
+						 outKey=round_key;
 						 
-endmodule
+						end
+						validOut<=validIn;
+				end
+				end
+						
+						
+						
+		  
+		function [31:0]	rcon;
+      input	[3:0]	rc;
+      case(rc)	
+         4'h0: rcon=32'h01_00_00_00;
+         4'h1: rcon=32'h02_00_00_00;
+         4'h2: rcon=32'h04_00_00_00;
+         4'h3: rcon=32'h08_00_00_00;
+         4'h4: rcon=32'h10_00_00_00;
+         4'h5: rcon=32'h20_00_00_00;
+         4'h6: rcon=32'h40_00_00_00;
+         4'h7: rcon=32'h80_00_00_00;
+         4'h8: rcon=32'h1b_00_00_00;
+         4'h9: rcon=32'h36_00_00_00;
+         default: rcon=32'h00_00_00_00;
+       endcase
 
+     endfunction
+		  
+		  		 
+endmodule
 
 
 //==================================================================================================================
