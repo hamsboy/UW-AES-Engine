@@ -3,7 +3,7 @@
 This program expends a single key (128-bits or 256-bits)
 */
 
-/*In this version I combined Subyte and mix Column as one Layer
+/*
 */
 
 module KeyExpansion #(parameter KEY_WIDTH = 128) 
@@ -17,7 +17,7 @@ module KeyExpansion #(parameter KEY_WIDTH = 128)
 			 reg [31:0] w0,w1,w2,w3,w4;
 			 wire [31:0] sub;
 	       reg [31:0] temp;
-			
+			 reg [KEY_WIDTH-1:0] round_key;
 			 //split the key into 4 words
 
 
@@ -46,7 +46,7 @@ module KeyExpansion #(parameter KEY_WIDTH = 128)
 
 			generate
 					for (itr = 0 ; itr <= 31; itr = itr+8) begin :a
-								sbox sb (.sbox_data_in(temp[itr +:8]),.clk(clk),.reset(reset) , .sbox_data_out(sub[itr +:8]));
+								sbox sb (.addr(temp[itr +:8]),.clk(clk),.reset(reset) , .validIn(validIn),.dout(sub[itr +:8]));
 								end
 			endgenerate
 		 
@@ -54,18 +54,14 @@ module KeyExpansion #(parameter KEY_WIDTH = 128)
 	       
        
 			 
-				always @(posedge clk,negedge reset) begin
-					if(!reset) begin
-						outKey<=0;
-						validOut<=0;
-					 end else begin
-							  if(validIn) begin
+				always @(*) begin
+							 
 									if (!flip) begin  
 										 temp<=w4;
-										 outKey[127:96]<=w0^sub;
-										 outKey[95:64]<=w0^sub^w1;
-										 outKey[63:32]<=w0^sub^w1^w2;
-										 outKey[31:0]<=w0^sub^w1^w2^w3;
+										 round_key[127:96]<=w0^sub;
+										 round_key[95:64]<=w0^sub^w1;
+										 round_key[63:32]<=w0^sub^w1^w2;
+										 round_key[31:0]<=w0^sub^w1^w2^w3;
 											
 										 //update rcon
 										 rnum_out<=rnum+1;
@@ -74,10 +70,10 @@ module KeyExpansion #(parameter KEY_WIDTH = 128)
 										  //rotate the last word by one byte(so rotate w3 by  1byte)
 										  temp<={w4[23:0],w4[31:24]};
 										  
-										  outKey[127:96]<=w0^sub^rcon(rnum);
-										  outKey[95:64]<=w0^sub^rcon(rnum)^w1;
-										  outKey[63:32]<=w0^sub^rcon(rnum)^w1^w2;
-										  outKey[31:0]<=w0^sub^rcon(rnum)^w1^w2^w3;
+										  round_key[127:96]<=w0^sub^rcon(rnum);
+										  round_key[95:64]<=w0^sub^rcon(rnum)^w1;
+										  round_key[63:32]<=w0^sub^rcon(rnum)^w1^w2;
+										  round_key[31:0]<=w0^sub^rcon(rnum)^w1^w2^w3;
 										  rnum_out<=rnum;
 									end 
 								  
@@ -87,12 +83,25 @@ module KeyExpansion #(parameter KEY_WIDTH = 128)
 								  end else begin
 											outflip<=!flip;
 								  end 
-								 validOut<=validIn;
-							 end
-					end
+							
+					//end
          end
 		  
-		  
+		 always @(posedge clk,negedge reset) begin
+					 if(!reset) begin
+						outKey<=0;
+						validOut<=0;
+					 end else begin
+					   if(validIn) begin
+						 outKey=round_key;
+						 
+						end
+						validOut<=validIn;
+				end
+				end
+						
+						
+						
 		  
 		function [31:0]	rcon;
       input	[3:0]	rc;
@@ -185,32 +194,4 @@ KeyExpansion aes10 (.key(k9),.prev_key(k8),.keyLen(keyLen),.validIn(1'b1),.rnum_
 
 
 
-
-
-
-
-
-
-//KeyExpansion aes (.key(key),.keyLen(1'b1),.validIn(1'b1),.rnum(32'h01000000),.clk(clk),.reset(reset),.validOut(validOut),.outKey(outKey));
-//KeyExpansion aes (.key(key),.keyLen(1'b1),.validIn(1'b1),.rnum(32'h01000000),.clk(clk),.reset(reset),.validOut(validOut),.outKey(outKey));
- 
-	// reference the device under test (shiftRow module)
-	//shiftRow dut (.shiftRow_data_in(s_in), .shiftRow_data_out(s_out));
-//	
-//	initial begin	// embed the test vector
-//		$readmemh("shiftRowTest.tv", testvectors); // read in test vectors from .tv file
-//		s_in = testvectors[0];
-//		end	
-//
-//	
-	//wire [7:0] address;
-	
-	//reg [15:0] data_ROM [0:255];
-  //wire [255:0 ] adress;
-  //initial $readmemh("C:\\Users\\youma\\Desktop\\Capstone\\verilog\\rom.txt", data_ROM); 
-  
-	//assign address=(data_ROM[8'hff][15])?((data_ROM[8'hff][15:8]<<1) ^ 8'h1b):(data_ROM[8'hff][15:8]<<1); 
- // AESCORE1 core1 (.key(key), .clk(clk),.keyLen(keyLen),.validIn(validIn), .validOut(validOut), .data(data), .dataOut(dataOut),.keyOut(outKey));
 endmodule
-
-
