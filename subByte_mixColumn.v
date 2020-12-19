@@ -51,9 +51,9 @@ module subByte_mixColumn
 			sb_mc_valid_out <= 1'b0;
 			stateOut<=128'b0;
 		end else begin 
-			if (sb_mc_valid_in) begin
+			//if (sb_mc_valid_in) begin
 		    stateOut<=state_out;
-			end
+			//end
 			 sb_mc_valid_out=sb_mc_valid_in;
 		end	
 	end
@@ -61,3 +61,52 @@ endmodule
 
 
 
+//
+module subByte_mixColumn_testbench();
+
+	
+	//wire   [3:0] rnum;
+     
+	wire [127:0] state_out;
+	wire[127:0] state_in; 
+	
+	
+	
+   assign state_in=128'h4915598f55e5d7a0daca94fa1f0a63f7;
+//
+//   reg [127:0] s_in;
+//	wire [127:0] s_out;
+	reg clk;	
+	reg reset;
+	// 128-bit data
+	// 11 rows in shifrRowTest.tv file
+	//reg [127:0] testvectors [0:1];
+	//integer i;
+   wire validout;
+	wire validout2;
+	// Set up the clock
+	parameter CLOCK_PERIOD = 100;	// simulating a toggling clock
+	initial clk = 1;
+
+	always begin
+		#(CLOCK_PERIOD/2) clk = ~clk;				// clock toggle
+	end
+	initial begin
+	reset=0;
+	#100;
+	reset=1;
+	end
+	
+		
+	
+	wire [127:0] s_out;
+	mix dut ( 
+						.shiftRow_valid_in(1'b1), // send a constant high valid bit
+						.shiftRow_data_in(state_in),
+						.shiftRow_data_out(s_out),
+						.shiftRow_valid_out(validOut2)
+						);
+	
+	subByte_mixColumn sb (.clk(clk),.rst(reset),.sb_mc_valid_in(1'b1),.state_in(s_out),.stateOut(state_out),.sb_mc_valid_out(validout));
+	
+endmodule

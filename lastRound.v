@@ -1,12 +1,16 @@
 module lastRound
 	#(
-	parameter DATA_WIDTH = 128				// size of data, always 128 bit
+	parameter KEY_WIDTH = 128,					// size of key, either 128 or 256 bit
+	parameter DATA_WIDTH = 128,				// size of data, always 128 bit
+	parameter ROM_WIDTH = 20,					// Width of memory element, i.e. M20k has 20 bit width
+	parameter SELECT_SUBBYTE = 1	
 	)
 	(
 	
    input keyLen	,// Active low
 	input wire [DATA_WIDTH-1:0] prev_key, 
-	input round_valid_in, 						// Valid bit in. When high, data is valid and should be processed
+	input round_valid_in, // Valid bit in. When high, data is valid and should be processed
+   input clk,	
 	input wire [DATA_WIDTH-1:0] state_in, 	// Plaintext block data to be ecrypted
 	input wire [DATA_WIDTH-1:0] key_in,		// Key used to encrypt plaintext data
 	output reg [DATA_WIDTH-1:0] state_out,// Block data which has gone through a single round of encryption
@@ -30,7 +34,8 @@ module lastRound
 										
 									
 	
-	subByte #(DATA_WIDTH) sub 	(     .subByte_valid_in(round_valid1),
+	subByte #(DATA_WIDTH, ROM_WIDTH, SELECT_SUBBYTE)sub 	( .clk(clk),   
+                                                       	.subByte_valid_in(round_valid1),
 																			.subByte_data_in(state1),
 																			.subByte_data_out(state2),
 																			.subByte_valid_out(round_valid_out)

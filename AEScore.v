@@ -1,7 +1,9 @@
 module AEScore
 	#(
-	parameter KEY_WIDTH = 128,						// size of key, either 128 or 256 bit
-	parameter DATA_WIDTH = 128,					// size of data, always 128 bit
+	parameter KEY_WIDTH = 256,						// size of key, either 128 or 256 bit
+	parameter DATA_WIDTH = 128,
+   parameter ROM_WIDTH = 20,						// Width of memory element, i.e. M20k has 20 bit width
+	parameter SELECT_SUBBYTE = 1,	// size of data, always 128 bit
 	parameter WORD = 32								// Defines length of a word as 32 bits
 	)
 	(
@@ -12,7 +14,7 @@ module AEScore
 	input [KEY_WIDTH-1:0] key_in, 				// key to be used for encryption
 	input keyLen,
 	output [DATA_WIDTH-1:0] ciphertext_out,	// ciphertext out
-	output [DATA_WIDTH-1:0] key_out,
+	//output [DATA_WIDTH-1:0] key_out,
 	output valid_out									// Valid bit out. When high, data is valid and can be used in another function.	
 	); 													// end signals/
 
@@ -38,10 +40,12 @@ assign valid[1]=valid_in;
 assign rnum[1]=4'b0;
 assign flips[1]=1'b1;
 assign validRound[1]=valid_in;
+
 	
 	genvar i;
 	generate
-		for (i = 1; i < NUM_ROUNDS; i = i + 1) begin :round    								
+		for (i = 1; i <NUM_ROUNDS; i = i + 1) begin :round    	
+		
 			generateKey aes (	.key(keys[i]),
 									.prev_key(keys[i-1]),
 									.keyLen(keyLen),
@@ -56,7 +60,7 @@ assign validRound[1]=valid_in;
 									.outflip(flips[i+1])
 									);
 									
-			encryptSingleRound #( DATA_WIDTH) round 	(.keyLen(keyLen),
+			encryptSingleRound #(  DATA_WIDTH, ROM_WIDTH,SELECT_SUBBYTE ) round 	(.keyLen(keyLen),
 			                                                               .prev_key(keys[i]),
 																								.clk(clk),
 																								.rst(rst),
@@ -75,7 +79,7 @@ assign validRound[1]=valid_in;
 	// Final round:
 	
 
-
+//
 	generateKey aes (	
 							.key(keys[NUM_ROUNDS]),
 							.prev_key(keys[NUM_ROUNDS-1]),
@@ -90,18 +94,19 @@ assign validRound[1]=valid_in;
 							.flip(flips[NUM_ROUNDS]),
 							.outflip(flips[NUM_ROUNDS+1])
 							);
-							
-	lastRound #(DATA_WIDTH) lastround 	(.keyLen(keyLen),
+//							
+	lastRound #(KEY_WIDTH, DATA_WIDTH, ROM_WIDTH,SELECT_SUBBYTE) lastround 	(.keyLen(keyLen),
+	                                                             .clk(clk),
 	                                                            .prev_key(keys[NUM_ROUNDS]),
 																					.round_valid_in(validRound[NUM_ROUNDS]),
 																					.state_in(state[NUM_ROUNDS]),
 																					.key_in(keys[NUM_ROUNDS+1]), 
 																					.state_out(state[NUM_ROUNDS+1]),
-																					.round_valid_out(validRound[NUM_ROUNDS+1])
+																					.round_valid_out(valid_out)
 																				);
 //	// Final Assignments
-	assign key_out = keys[NUM_ROUNDS+1];
-	assign ciphertext_out = state[NUM_ROUNDS+1];
+	//assign key_out = keys[2];
+	assign ciphertext_out = state[NUM_ROUNDS +1];
 
 
 	
@@ -119,7 +124,7 @@ module test();
 	
 	//assign validIn=0;
 	
-	assign keyLen=0;	
+	assign keyLen=1;	
 
 
 
@@ -146,21 +151,20 @@ module test();
 	
 	initial begin
 		reset = 0;
-		#50;
+		#100;
 		reset = 1;
 	end
 
 	
 	// device under test
-	AEScore dut (.key_in(128'h000102030405060708090a0b0c0d0e0f),
+	AEScore dut (.key_in(256'h000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f),
 						.clk(clk),
-						
 						.keyLen(keyLen),
 						.valid_in(1'b1),
                   .rst(reset),
 						.valid_out(validOut),
 						.plaintext_in(128'h00112233445566778899aabbccddeeff),
-						.ciphertext_out(dataOut),
-						.key_out(outKey));
+						.ciphertext_out(dataOut));
 endmodule
 
+         
